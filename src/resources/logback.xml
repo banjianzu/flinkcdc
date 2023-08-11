@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+    <!-- magenta:洋红 -->
+    <!-- boldMagenta:粗红-->
+    <!-- cyan:青色 -->
+    <!-- white:白色 -->
+    <!-- magenta:洋红 -->
+
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%yellow(%date{yyyy-MM-dd HH:mm:ss})
+              |%highlight(%-5level) |%blue(%thread)
+              |%blue(%file:%line) |%green(%logger)
+              |%cyan(%msg%n)"/>
+
+    <!-- 指定日志文件路径 /root/softwear/flink_cdc/logs -->
+    <property name="LOG_HOME" value="/root/softwear/flink_cdc/logs"/>
+
+    <!--控制台日志-开始-->
+    <appender name="consoleApp" class="ch.qos.logback.core.ConsoleAppender">
+
+        <!--只打印-->
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator>
+                <expression>return
+                    message.contains("FlinkCDC程序info信息:")
+                    || message.contains("FlinkCDC程序debug信息:")
+                    || message.contains("FlinkCDC程序error信息:")
+                    ;
+                </expression>
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>ACCEPT</OnMatch>
+        </filter>
+
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+
+    </appender>
+    <!--控制台日志-结束-->
+
+    <!--错误日志到文件-开始-->
+    <appender name="fileErrorLog"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+
+        <encoder>
+            <!--[%X{requestId}] 线程id,方便排查日志-->
+            <pattern>
+                %date %level [%thread] [%X{requestId}] [%logger{36}.%method\(\):%line] %msg%n
+            </pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory><!-- 保留 30 天日志 -->
+        </rollingPolicy>
+
+    </appender>
+    <!--错误日志到文件-结束-->
+
+    <!--info日志到文件-开始-->
+    <appender name="fileDebugApp"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <!--只打印匹配的内容-->
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator> <!-- defaults to type ch.qos.logback.classic.boolex.JaninoEventEvaluator -->
+                <expression>return
+                    message.contains("FlinkCDC程序info信息:")
+                    || message.contains("FlinkCDC程序debug信息:")
+                    || message.contains("FlinkCDC程序error信息:")
+                    ;
+                </expression>
+            </evaluator>
+            <OnMismatch>DENY</OnMismatch>
+            <OnMatch>ACCEPT</OnMatch>
+        </filter>
+
+        <encoder>
+            <pattern>
+                %d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger - %msg%n
+            </pattern>
+        </encoder>
+
+        <!--滚动策略-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--路径-->
+            <fileNamePattern>${LOG_HOME}/info.%d.log</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+    <!--info日志到文件-结束-->
+
+
+    <!-- LoggerContextListener 接口的实例能监听
+     logger context 上发生的事件，比如说日志级别的变化 -->
+    <contextListener
+            class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <root level="INFO">
+        <!--        <appender-ref ref="STDOUT" />-->
+        <appender-ref ref="fileErrorLog"/>
+        <appender-ref ref="fileDebugApp"/>
+        <appender-ref ref="consoleApp"/>
+    </root>
+
+</configuration>
