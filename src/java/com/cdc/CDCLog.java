@@ -15,6 +15,7 @@ public class CDCLog {
     public static  void warn(String info){
 
         log.warn("FlinkCDC程序debug信息:" + info);
+        log.warn("Flinkcdc程序debug信息输出") ;
     }
 
     public static void error(String info){
